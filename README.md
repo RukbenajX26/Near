@@ -62,24 +62,6 @@ If everything is set up correctly, you should see your new app running in the An
 
 This is one way to run your app — you can also build it directly from Android Studio or Xcode.
 
-## Installable Android release (no Metro or USB required)
-
-The debug build created by `npm run android` needs the Metro development server. Use the
-release build for a standalone APK instead:
-
-```powershell
-npm.cmd run android:release
-```
-
-The APK is written to `android\\app\\build\\outputs\\apk\\release\\app-release.apk`. It embeds
-the JavaScript bundle, so Metro does not need to be running. Copy that file to the phone
-(for example with Quick Share, email, cloud storage, or Wi-Fi), open it on the phone, and
-allow installs from that source if Android asks.
-
-The current release APK is signed with the project debug key, which is suitable for local
-sideloading. Before publishing or sharing broadly, configure a private release keystore and
-change the `release` signing configuration in `android/app/build.gradle`.
-
 ## Step 3: Modify your app
 
 Now that you have successfully run the app, let's make changes!
@@ -113,4 +95,3 @@ To learn more about React Native, take a look at the following resources:
 - [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
 - [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
 - [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
-"# Near" 
