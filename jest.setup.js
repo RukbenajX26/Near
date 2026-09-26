@@ -23,12 +23,22 @@ jest.mock('react-native-fs', () => ({
   __esModule: true,
   default: {
     DocumentDirectoryPath: '/tmp',
+    CachesDirectoryPath: '/tmp',
     exists: jest.fn(() => Promise.resolve(true)),
     mkdir: jest.fn(() => Promise.resolve()),
     readFile: jest.fn(() => Promise.resolve('')), 
     writeFile: jest.fn(() => Promise.resolve()),
+    unlink: jest.fn(() => Promise.resolve()),
   },
 }));
+jest.mock('react-native-quick-crypto', () => {
+  const crypto = require('crypto');
+  return {
+    __esModule: true,
+    Buffer: require('buffer').Buffer,
+    default: crypto,
+  };
+});
 jest.mock('@react-native-documents/picker', () => ({
   errorCodes: {OPERATION_CANCELED: 'OPERATION_CANCELED'},
   isErrorWithCode: () => false,
@@ -52,6 +62,7 @@ jest.mock('react-native-svg', () => {
     Line: Svg,
     LinearGradient: Svg,
     Path: Svg,
+    Rect: Svg,
     Stop: Svg,
   };
 });
