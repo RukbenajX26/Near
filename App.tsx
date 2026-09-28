@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StatusBar, useColorScheme } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { DateSelector } from './src/components/DateSelector';
 import { CelestialBackdrop } from './src/components/CelestialArt';
 import {
@@ -15,6 +15,7 @@ import { ModeToggle } from './src/components/ModeToggle';
 import { PositionsView } from './src/components/PositionsView';
 import { ProgressModal } from './src/components/ProgressModal';
 import { SettingsModal } from './src/components/SettingsModal';
+import { StartupScreen } from './src/components/StartupScreen';
 import { useAppState } from './src/hooks/useAppState';
 import { useTheme } from './src/hooks/useTheme';
 import { styles } from './src/styles/appStyles';
@@ -25,6 +26,7 @@ function App() {
   );
   const [keyReady, setKeyReady] = useState(false);
   const [completion, setCompletion] = useState<CompletionResult | null>(null);
+  const [isStarting, setIsStarting] = useState(true);
   const {
     date,
     setDate,
@@ -48,75 +50,93 @@ function App() {
     setCompletion(null);
   };
 
+  useEffect(() => {
+    const startupTimer = setTimeout(() => setIsStarting(false), 1_800);
+    return () => clearTimeout(startupTimer);
+  }, []);
+
+  if (isStarting) {
+    return (
+      <SafeAreaProvider>
+        <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
+        <StartupScreen colors={colors} dark={dark} />
+      </SafeAreaProvider>
+    );
+  }
+
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
-      <CelestialBackdrop colors={colors} dark={dark} />
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
-      <Header
-        dark={dark}
-        colors={colors}
-        onSettingsPress={() => setShowSettings(true)}
-      />
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        keyboardDismissMode="on-drag"
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+    <SafeAreaProvider>
+      <SafeAreaView
+        style={[styles.safe, { backgroundColor: colors.background }]}
       >
-        <HeroSection dark={dark} colors={colors} />
-        <ModeToggle
+        <CelestialBackdrop colors={colors} dark={dark} />
+        <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
+        <Header
+          dark={dark}
           colors={colors}
-          mode={mode}
-          onModeChange={nextMode => {
-            setMode(nextMode);
-            setKeyReady(false);
-          }}
+          onSettingsPress={() => setShowSettings(true)}
         />
-        <DateSelector
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <HeroSection dark={dark} colors={colors} />
+          <ModeToggle
+            colors={colors}
+            mode={mode}
+            onModeChange={nextMode => {
+              setMode(nextMode);
+              setKeyReady(false);
+            }}
+          />
+          <DateSelector
+            colors={colors}
+            date={date}
+            onCompute={() => setKeyReady(true)}
+            onDateChange={nextDate => {
+              setDate(nextDate);
+              setKeyReady(false);
+            }}
+          />
+          {keyReady ? <KeyDisplay date={date} colors={colors} /> : null}
+          {keyReady ? <PositionsView date={date} colors={colors} /> : null}
+          <FileOperations
+            colors={colors}
+            date={date}
+            file={file}
+            folderUri={folderUri}
+            keyReady={keyReady}
+            mode={mode}
+            onFileSelect={setFile}
+            onFolderSelect={setFolderUri}
+            onResetSelections={resetSelections}
+            onComplete={setCompletion}
+            onProcessEnd={() => setProcessing(false)}
+            onProcessStart={() => {
+              setCompletion(null);
+              setProcessing(true);
+            }}
+          />
+        </ScrollView>
+        <SettingsModal
           colors={colors}
-          date={date}
-          onCompute={() => setKeyReady(true)}
-          onDateChange={nextDate => {
-            setDate(nextDate);
-            setKeyReady(false);
-          }}
+          onClose={() => setShowSettings(false)}
+          onThemeChange={setThemeChoice}
+          themeChoice={themeChoice}
+          visible={showSettings}
         />
-        {keyReady ? <KeyDisplay date={date} colors={colors} /> : null}
-        {keyReady ? <PositionsView date={date} colors={colors} /> : null}
-        <FileOperations
-          colors={colors}
-          date={date}
-          file={file}
-          folderUri={folderUri}
-          keyReady={keyReady}
-          mode={mode}
-          onFileSelect={setFile}
-          onFolderSelect={setFolderUri}
-          onResetSelections={resetSelections}
-          onComplete={setCompletion}
-          onProcessEnd={() => setProcessing(false)}
-          onProcessStart={() => {
-            setCompletion(null);
-            setProcessing(true);
-          }}
+        <ProgressModal dark={dark} mode={mode} visible={processing} />
+        <CompletionModal
+          dark={dark}
+          onClose={() => setCompletion(null)}
+          result={completion}
+          visible={completion !== null}
         />
-      </ScrollView>
-      <SettingsModal
-        colors={colors}
-        onClose={() => setShowSettings(false)}
-        onThemeChange={setThemeChoice}
-        themeChoice={themeChoice}
-        visible={showSettings}
-      />
-      <ProgressModal dark={dark} mode={mode} visible={processing} />
-      <CompletionModal
-        dark={dark}
-        onClose={() => setCompletion(null)}
-        result={completion}
-        visible={completion !== null}
-      />
-    </SafeAreaView>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
